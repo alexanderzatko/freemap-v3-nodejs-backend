@@ -67,12 +67,14 @@ export const UserResponseSchema = z
     id: z.uint32(),
     name: z.string(),
     email: z.email().nullable(),
+    description: z.string().nullable(),
     authToken: z.string().nonempty(),
     authProviders: z.array(z.enum(['osm', 'facebook', 'google', 'garmin'])),
     isAdmin: z.boolean(),
     language: z.string().nullable(),
-    lat: z.number().nullable(),
-    lon: z.number().nullable(),
+    coordinates: z
+      .strictObject({ lat: z.number(), lon: z.number() })
+      .nullable(),
     premiumExpiration: z.iso.datetime().nullable(),
     sendGalleryEmails: z.boolean(),
     settings: z.record(z.string(), z.unknown()).nullable(),
@@ -101,35 +103,41 @@ export const MapMetaSchema = z
   })
   .meta({ id: 'MapMeta' });
 
-export const UserRowSchema = z.object({
-  id: z.uint32(),
-  osmId: z.uint32().nullable(),
-  facebookUserId: z.string().nullable(),
-  googleUserId: z.string().nullable(),
-  garminUserId: z.string().nullable(),
-  garminAccessToken: z.string().nullable(),
-  garminAccessTokenSecret: z.string().nullable(),
-  name: z.string(),
-  email: z.email().nullable(),
-  isAdmin: z.boolean(),
-  createdAt: z.date(),
-  lat: z.number().nullable(),
-  lon: z.number().nullable(),
-  settings: z
-    .string()
-    .transform((s, ctx) => {
-      try {
-        return JSON.parse(s);
-      } catch (e) {
-        ctx.addIssue({ code: 'custom', message: 'Invalid JSON: ' + e });
-        return z.NEVER;
-      }
-    })
-    .pipe(z.record(z.string(), z.unknown())),
-  sendGalleryEmails: z.boolean(),
-  premiumExpiration: z.date().nullable(),
-  credits: z.number(),
-  language: z.string().nullable(),
-});
+export const UserRowSchema = z
+  .object({
+    id: z.uint32(),
+    osmId: z.uint32().nullable(),
+    facebookUserId: z.string().nullable(),
+    googleUserId: z.string().nullable(),
+    garminUserId: z.string().nullable(),
+    garminAccessToken: z.string().nullable(),
+    garminAccessTokenSecret: z.string().nullable(),
+    name: z.string(),
+    email: z.email().nullable(),
+    description: z.string().nullable(),
+    isAdmin: z.boolean(),
+    createdAt: z.date(),
+    lat: z.number().nullable(),
+    lon: z.number().nullable(),
+    settings: z
+      .string()
+      .transform((s, ctx) => {
+        try {
+          return JSON.parse(s);
+        } catch (e) {
+          ctx.addIssue({ code: 'custom', message: 'Invalid JSON: ' + e });
+          return z.NEVER;
+        }
+      })
+      .pipe(z.record(z.string(), z.unknown())),
+    sendGalleryEmails: z.boolean(),
+    premiumExpiration: z.date().nullable(),
+    credits: z.number().nonnegative(),
+    language: z.string().nullable(),
+  })
+  .transform(({ lat, lon, ...user }) => ({
+    ...user,
+    coordinates: lat === null || lon === null ? null : { lat, lon },
+  }));
 
 export type UserRow = z.infer<typeof UserRowSchema>;

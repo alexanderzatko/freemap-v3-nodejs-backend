@@ -31,6 +31,7 @@ export async function initDatabase() {
       garminAccessTokenSecret VARCHAR(255) CHARSET ascii NULL,
       name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
       email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+      description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
       isAdmin BIT NOT NULL DEFAULT 0,
       createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       lat FLOAT(8, 6) NULL,
@@ -238,9 +239,7 @@ export async function initDatabase() {
   ];
 
   const updates: (string | string[])[] = [
-    'ALTER TABLE user MODIFY COLUMN isAdmin BIT NOT NULL DEFAULT false',
-    'ALTER TABLE user MODIFY COLUMN sendGalleryEmails BIT NOT NULL DEFAULT true',
-    'ALTER TABLE map MODIFY COLUMN public BIT NOT NULL DEFAULT false',
+    'ALTER TABLE user ADD COLUMN description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL',
   ];
 
   const db = await pool.getConnection();

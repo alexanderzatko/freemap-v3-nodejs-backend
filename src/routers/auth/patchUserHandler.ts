@@ -9,6 +9,7 @@ const BodySchema = z
   .strictObject({
     name: z.string().optional(),
     email: z.email().nullish(),
+    description: z.string().nullish(),
     lat: z.number().optional(),
     lon: z.number().optional(),
     settings: z.record(z.string(), z.unknown()).optional(),

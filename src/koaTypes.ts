@@ -1,26 +1,11 @@
 import { Socket } from 'net';
 import { Logger } from 'pino';
+import z from 'zod';
+import { UserRowSchema } from './types.js';
 
-export type User = {
+export type User = z.infer<typeof UserRowSchema> & {
   authProviders: string[];
   authToken: string;
-  credits: number;
-  email: string | null;
-  facebookUserId: string | null;
-  garminAccessToken: string | null;
-  garminAccessTokenSecret: string | null;
-  garminUserId: string | null;
-  googleUserId: string | null;
-  id: number;
-  isAdmin: boolean;
-  language: string | null;
-  lat: number | null;
-  lon: number | null;
-  name: string;
-  osmId: number | null;
-  premiumExpiration: Date | null;
-  sendGalleryEmails: boolean;
-  settings: Record<string, unknown> | null;
 };
 
 declare module 'koa' {
