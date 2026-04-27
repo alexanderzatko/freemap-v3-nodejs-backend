@@ -2,13 +2,13 @@ import { randomBytes } from 'node:crypto';
 import { ParameterizedContext } from 'koa';
 import sql, { empty, join, RawValue, raw } from 'sql-template-tag';
 import z from 'zod';
-import {
-  authProviderToColumn,
-  rowToUser,
-  userForResponse,
-} from '../../authenticator.js';
+import { authProviderToColumn, rowToUser } from '../../authenticator.js';
 import { runInTransaction } from '../../database.js';
-import { LoginResponseSchema, UserRowSchema } from '../../types.js';
+import {
+  LoginResponseSchema,
+  UserResponseSchema,
+  UserRowSchema,
+} from '../../types.js';
 
 const SettingsBodySchema = z.object({
   settings: z
@@ -246,7 +246,7 @@ export async function login(
   });
 
   ctx.body = LoginResponseSchema.parse({
-    user: userForResponse(rowToUser(userRow, authToken)),
+    user: UserResponseSchema.parse(rowToUser(userRow, authToken)),
     connect,
     clientData,
   });

@@ -62,23 +62,30 @@ export const TokenBodySchema = z
   })
   .meta({ id: 'TokenBody' });
 
+const CommonUserSchema = {
+  id: z.uint32(),
+  name: z.string(),
+  email: z.email().nullable(),
+  description: z.string().nullable(),
+  isAdmin: z.boolean(),
+  credits: z.number().nonnegative(),
+  language: z.string().nullable(),
+  sendGalleryEmails: z.boolean(),
+};
+
 export const UserResponseSchema = z
-  .strictObject({
-    id: z.uint32(),
-    name: z.string(),
-    email: z.email().nullable(),
-    description: z.string().nullable(),
+  .object({
+    ...CommonUserSchema,
     authToken: z.string().nonempty(),
     authProviders: z.array(z.enum(['osm', 'facebook', 'google', 'garmin'])),
-    isAdmin: z.boolean(),
-    language: z.string().nullable(),
     coordinates: z
       .strictObject({ lat: z.number(), lon: z.number() })
       .nullable(),
-    premiumExpiration: z.iso.datetime().nullable(),
-    sendGalleryEmails: z.boolean(),
+    premiumExpiration: z
+      .date()
+      .nullable()
+      .transform((d) => d?.toISOString()),
     settings: z.record(z.string(), z.unknown()).nullable(),
-    credits: z.number().nonnegative(),
   })
   .meta({ id: 'UserResponse' });
 
@@ -105,17 +112,13 @@ export const MapMetaSchema = z
 
 export const UserRowSchema = z
   .object({
-    id: z.uint32(),
+    ...CommonUserSchema,
     osmId: z.uint32().nullable(),
     facebookUserId: z.string().nullable(),
     googleUserId: z.string().nullable(),
     garminUserId: z.string().nullable(),
     garminAccessToken: z.string().nullable(),
     garminAccessTokenSecret: z.string().nullable(),
-    name: z.string(),
-    email: z.email().nullable(),
-    description: z.string().nullable(),
-    isAdmin: z.boolean(),
     createdAt: z.date(),
     lat: z.number().nullable(),
     lon: z.number().nullable(),
@@ -130,10 +133,7 @@ export const UserRowSchema = z
         }
       })
       .pipe(z.record(z.string(), z.unknown())),
-    sendGalleryEmails: z.boolean(),
     premiumExpiration: z.date().nullable(),
-    credits: z.number().nonnegative(),
-    language: z.string().nullable(),
   })
   .transform(({ lat, lon, ...user }) => ({
     ...user,

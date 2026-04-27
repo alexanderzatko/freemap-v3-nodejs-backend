@@ -1,5 +1,5 @@
 import { RouterInstance } from '@koa/router';
-import { authenticator, userForResponse } from '../../authenticator.js';
+import { authenticator } from '../../authenticator.js';
 import { AUTH_REQUIRED, registerPath } from '../../openapi.js';
 import { UserResponseSchema } from '../../types.js';
 
@@ -19,6 +19,6 @@ export function attachValidateHandler(router: RouterInstance) {
   });
 
   router.post('/validate', authenticator(true), async (ctx) => {
-    ctx.body = UserResponseSchema.parse(userForResponse(ctx.state.user!));
+    ctx.body = UserResponseSchema.parse(ctx.state.user);
   });
 }

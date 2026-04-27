@@ -80,37 +80,3 @@ export function rowToUser(row: UserRow, authToken: string): User {
     authToken,
   };
 }
-
-export function userForResponse(user: User) {
-  const {
-    authProviders,
-    authToken,
-    credits,
-    email,
-    id,
-    isAdmin,
-    language,
-    coordinates,
-    name,
-    description,
-    premiumExpiration,
-    sendGalleryEmails,
-    settings,
-  } = user;
-
-  return {
-    authProviders,
-    authToken,
-    credits,
-    email,
-    description,
-    id,
-    isAdmin,
-    language,
-    coordinates,
-    name,
-    premiumExpiration: premiumExpiration && premiumExpiration.toISOString(),
-    sendGalleryEmails,
-    settings,
-  };
-}
