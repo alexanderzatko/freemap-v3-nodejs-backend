@@ -100,7 +100,7 @@ export function attachGetPictureHandler(router: RouterInstance) {
         .max(1)
         .parse(
           await pool.query(sql`
-            SELECT picture.id AS pictureId, picture.createdAt, pathname, title, description, takenAt, ST_X(location) AS lon, ST_Y(location) AS lat, azimuth, pano,
+            SELECT picture.id AS pictureId, picture.createdAt, pathname, title, picture.description, takenAt, ST_X(location) AS lon, ST_Y(location) AS lat, azimuth, pano,
               user.id as userId, user.name, premium,
               (SELECT GROUP_CONCAT(name SEPARATOR '\n') FROM pictureTag WHERE pictureId = picture.id) AS tags, ${raw(ratingSubquery)}
               ${
