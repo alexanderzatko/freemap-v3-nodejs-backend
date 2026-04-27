@@ -84,7 +84,7 @@ export const UserResponseSchema = z
     premiumExpiration: z
       .date()
       .nullable()
-      .transform((d) => d?.toISOString()),
+      .transform((d) => (d === null ? null : d.toISOString())),
     settings: z.record(z.string(), z.unknown()).nullable(),
   })
   .meta({ id: 'UserResponse' });

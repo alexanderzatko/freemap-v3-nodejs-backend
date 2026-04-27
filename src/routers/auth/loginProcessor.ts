@@ -6,7 +6,6 @@ import { authProviderToColumn, rowToUser } from '../../authenticator.js';
 import { runInTransaction } from '../../database.js';
 import {
   LoginResponseSchema,
-  UserResponseSchema,
   UserRowSchema,
 } from '../../types.js';
 
@@ -246,7 +245,7 @@ export async function login(
   });
 
   ctx.body = LoginResponseSchema.parse({
-    user: UserResponseSchema.parse(rowToUser(userRow, authToken)),
+    user: rowToUser(userRow, authToken),
     connect,
     clientData,
   });
