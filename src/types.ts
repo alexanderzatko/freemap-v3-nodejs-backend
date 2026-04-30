@@ -77,7 +77,9 @@ export const UserResponseSchema = z
   .object({
     ...CommonUserSchema,
     authToken: z.string().nonempty(),
-    authProviders: z.array(z.enum(['osm', 'facebook', 'google', 'garmin'])),
+    authProviders: z.array(
+      z.enum(['osm', 'facebook', 'google', 'garmin', 'apple']),
+    ),
     coordinates: z
       .strictObject({ lat: z.number(), lon: z.number() })
       .nullable(),
@@ -117,6 +119,7 @@ export const UserRowSchema = z
     facebookUserId: z.string().nullable(),
     googleUserId: z.string().nullable(),
     garminUserId: z.string().nullable(),
+    appleUserId: z.string().nullable(),
     garminAccessToken: z.string().nullable(),
     garminAccessTokenSecret: z.string().nullable(),
     createdAt: z.date(),

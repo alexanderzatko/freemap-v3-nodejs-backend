@@ -4,10 +4,7 @@ import sql, { empty, join, RawValue, raw } from 'sql-template-tag';
 import z from 'zod';
 import { authProviderToColumn, rowToUser } from '../../authenticator.js';
 import { runInTransaction } from '../../database.js';
-import {
-  LoginResponseSchema,
-  UserRowSchema,
-} from '../../types.js';
+import { LoginResponseSchema, UserRowSchema } from '../../types.js';
 
 const SettingsBodySchema = z.object({
   settings: z
@@ -64,6 +61,7 @@ export async function login(
         'osmId',
         'facebookUserId',
         'googleUserId',
+        'appleUserId',
       ]) {
         authData[col] = userRow[col];
       }
@@ -78,6 +76,7 @@ export async function login(
           'osmId',
           'facebookUserId',
           'googleUserId',
+          'appleUserId',
         ] as const) {
           if (
             currentUser[col] &&

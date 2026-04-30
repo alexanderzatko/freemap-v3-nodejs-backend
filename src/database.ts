@@ -240,6 +240,8 @@ export async function initDatabase() {
 
   const updates: (string | string[])[] = [
     'ALTER TABLE user ADD COLUMN description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL',
+    'ALTER TABLE user ADD COLUMN appleUserId VARCHAR(255) DEFAULT NULL',
+    'CREATE UNIQUE INDEX user_appleUserId ON user(appleUserId)',
   ];
 
   const db = await pool.getConnection();

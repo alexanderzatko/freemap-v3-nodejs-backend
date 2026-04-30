@@ -9,6 +9,7 @@ export const authProviderToColumn = {
   osm: 'osmId',
   garmin: 'garminUserId',
   google: 'googleUserId',
+  apple: 'appleUserId',
 } as const;
 
 export const columnToAuthProvider = Object.fromEntries(
