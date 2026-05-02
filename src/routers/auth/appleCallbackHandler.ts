@@ -1,0 +1,48 @@
+import { RouterInstance } from '@koa/router';
+import { AUTH_OPTIONAL, registerPath } from '../../openapi.js';
+
+export function attachAppleCallbackHandler(router: RouterInstance) {
+  registerPath('/auth/apple-callback', {
+    post: {
+      summary: 'Apple OAuth Callback for Android',
+      tags: ['auth'],
+      security: AUTH_OPTIONAL,
+      responses: {
+        307: {
+          description: 'Redirects to Android App via Intent',
+        },
+      },
+    },
+  });
+
+  router.post('/apple-callback', async (ctx) => {
+    // Apple sends application/x-www-form-urlencoded
+    const body = ctx.request.body || {};
+    
+    const searchParams = new URLSearchParams(body as Record<string, string>).toString();
+    const intentUrl = `intent://callback?${searchParams}#Intent;package=sk.bigware.freemap;scheme=signinwithapple;end`;
+    
+    ctx.log.info({ intentUrl }, 'Handling Apple Sign In callback');
+    
+    ctx.status = 200;
+    ctx.type = 'text/html';
+    ctx.body = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Apple Sign In Callback</title>
+</head>
+<body>
+  <script>
+    if (!window.opener) {
+      window.location.replace("${intentUrl}");
+    } else {
+      // Apple JS will handle the Web popup closure and promise resolution, 
+      // but if we reach here we can attempt to close the popup.
+      window.close();
+    }
+  </script>
+</body>
+</html>`;
+  });
+}

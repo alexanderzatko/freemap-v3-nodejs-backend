@@ -35,6 +35,7 @@
   "dependencies": {
     "@koa/router": "^15.4.0",
     "@mapbox/tilebelt": "^2.0.3",
+    "apple-signin-auth": "^1.7.6",
     "@turf/bbox": "^7.3.5",
     "@turf/boolean-intersects": "^7.3.5",
     "@turf/center": "^7.3.5",
