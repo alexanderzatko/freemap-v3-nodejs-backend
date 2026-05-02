@@ -20,7 +20,10 @@
     "url": "https://github.com/FreemapSlovakia/freemap-v3-nodejs-backend/issues"
   },
   "lint-staged": {
-    "*.{js,ts}": ["biome check", "git add"]
+    "*.{js,ts}": [
+      "biome check",
+      "git add"
+    ]
   },
   "scripts": {
     "start": "node --enable-source-maps build/index.js",
@@ -35,7 +38,6 @@
   "dependencies": {
     "@koa/router": "^15.4.0",
     "@mapbox/tilebelt": "^2.0.3",
-    "apple-signin-auth": "^1.7.6",
     "@turf/bbox": "^7.3.5",
     "@turf/boolean-intersects": "^7.3.5",
     "@turf/center": "^7.3.5",
@@ -63,11 +65,11 @@
     "sql-template-tag": "^5.2.1",
     "tsc-watch": "^7.2.0",
     "ws": "^8.20.0",
-    "zod": "^4.4.1",
+    "zod": "^4.4.2",
     "zod-openapi": "^5.4.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
+    "@biomejs/biome": "^2.4.14",
     "@dotenvx/dotenvx": "^1.64.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/etag": "^1.8.4",
@@ -77,13 +79,12 @@
     "@types/koa-websocket": "^5.0.11",
     "@types/node": "^24.12.2",
     "@types/ws": "^8.18.1",
-    "globals": "^17.5.0",
+    "globals": "^17.6.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "node-addon-api": "^8.7.0",
     "node-gyp": "^12.3.0",
     "pino-pretty": "^13.1.3",
-    "ts-patch": "^3.3.0",
     "typescript": "~6.0.3"
   },
   "resolutions": {
