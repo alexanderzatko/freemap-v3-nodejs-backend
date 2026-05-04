@@ -1,15 +1,14 @@
 import Router from '@koa/router';
-
+import { attachAppleCallbackHandler } from './appleCallbackHandler.js';
 import { attachDeleteUserHandler } from './deleteUserHandler.js';
 import { attachDisconnectHandler } from './disconnectHandler.js';
 import { attachGetPurchasesHandler } from './getPurchasesHandler.js';
+import { attachLoginWithAppleHandler } from './loginWithAppleHandler.js';
 import { attachLoginWithFacebookHandler } from './loginWithFacebookHandler.js';
 import { attachLoginWithGarmin2Handler } from './loginWithGarmin2Handler.js';
 import { attachLoginWithGarminHandler } from './loginWithGarminHandler.js';
 import { attachLoginWithGoogleHandler } from './loginWithGoogleHandler.js';
 import { attachLoginWithOsmHandler } from './loginWithOsmHandler.js';
-import { attachLoginWithAppleHandler } from './loginWithAppleHandler.js';
-import { attachAppleCallbackHandler } from './appleCallbackHandler.js';
 import { attachLogoutHandler } from './logoutHandler.js';
 import { attachPatchUserHandler } from './patchUserHandler.js';
 import { attachPurchaseTokenHandler } from './purchaseTokenHandler.js';

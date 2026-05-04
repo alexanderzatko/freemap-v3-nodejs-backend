@@ -21,24 +21,28 @@ export function attachAppleCallbackHandler(router: RouterInstance) {
     const userAgent = (ctx.request.header['user-agent'] || '').toLowerCase();
     const isAndroid = userAgent.includes('android');
 
-    const searchParams = new URLSearchParams(body as Record<string, string>).toString();
-    const intentUrl = `signinwithapple://callback?${searchParams}`;
-    ctx.log.info({ intentUrl, isAndroid, userAgent: ctx.request.header['user-agent'] }, 'Handling Apple Sign In callback');
+    const searchParams = new URLSearchParams(
+      body as Record<string, string>,
+    ).toString();
+
+    const intentUrl = 'signinwithapple://callback?' + searchParams;
+
+    ctx.log.info(
+      { intentUrl, isAndroid, userAgent },
+      'Handling Apple Sign In callback',
+    );
 
     if (isAndroid) {
       // Chrome Custom Tab blocks JS-based intent:// redirects (no user gesture).
       // Server-side 302 redirects ARE allowed and followed by Chrome Custom Tab.
       // 302 is specifically used instead of 307 because Chrome often blocks POST redirects to intent:// URIs.
-      ctx.status = 302;
-      ctx.set('Location', intentUrl);
-      ctx.body = '';
+      ctx.redirect(intentUrl);
       return;
     }
 
     // Web popup flow: Apple JS SDK handles popup communication.
     // If window.opener exists it means we are in a popup - postMessage to Flutter web.
     // Otherwise show a fallback page or try JS redirect.
-    ctx.status = 200;
     ctx.type = 'text/html';
     ctx.body = `<!DOCTYPE html>
 <html>
