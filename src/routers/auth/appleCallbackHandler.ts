@@ -18,21 +18,26 @@ export function attachAppleCallbackHandler(router: RouterInstance) {
   router.post('/apple-callback', async (ctx) => {
     // Apple sends application/x-www-form-urlencoded
     const body = ctx.request.body || {};
-    
+    const userAgent = (ctx.request.header['user-agent'] || '').toLowerCase();
+    const isAndroid = userAgent.includes('android');
+
     const searchParams = new URLSearchParams(body as Record<string, string>).toString();
     const intentUrl = `intent://callback?${searchParams}#Intent;package=sk.bigware.freemap;scheme=signinwithapple;end`;
-    
-    const userAgent = ctx.request.headers['user-agent'] || '';
-    const isAndroid = /Android/i.test(userAgent);
+    ctx.log.info({ intentUrl, isAndroid, userAgent: ctx.request.header['user-agent'] }, 'Handling Apple Sign In callback');
 
     if (isAndroid) {
-      ctx.log.info({ intentUrl }, 'Redirecting Android to intent directly via 307');
+      // Chrome Custom Tab blocks JS-based intent:// redirects (no user gesture).
+      // Server-side 307 redirects ARE allowed and followed by Chrome Custom Tab.
+      // 307 is specifically used because it preserves the POST method of the Apple callback request.
       ctx.status = 307;
-      ctx.redirect(intentUrl);
+      ctx.set('Location', intentUrl);
+      ctx.body = '';
       return;
     }
-    
-    ctx.log.info('Serving HTML for Web Apple Sign In callback');
+
+    // Web popup flow: Apple JS SDK handles popup communication.
+    // If window.opener exists it means we are in a popup - postMessage to Flutter web.
+    // Otherwise show a fallback page or try JS redirect.
     ctx.status = 200;
     ctx.type = 'text/html';
     ctx.body = `<!DOCTYPE html>
@@ -43,12 +48,14 @@ export function attachAppleCallbackHandler(router: RouterInstance) {
 </head>
 <body>
   <script>
-    if (!window.opener) {
-      window.location.replace("${intentUrl}");
-    } else {
+    if (window.opener) {
       // Apple JS and Flutter sign_in_with_apple_web expect the data as a query string message
       window.opener.postMessage("?" + "${searchParams}", "*");
       window.close();
+    } else {
+      // Fallback: JS redirect just in case, or show manual link
+      window.location.replace("${intentUrl}");
+      document.write('<p>Prihlásenie dokončené. Vráťte sa do aplikácie.</p>');
     }
   </script>
 </body>
