@@ -68,12 +68,12 @@ export function attachLoginWithAppleHandler(router: RouterInstance) {
         ctx,
         'apple',
         sub,
-        name,
+        name ?? undefined,
         email,
         undefined,
         undefined,
-        language,
-        connect,
+        language ?? null,
+        connect ?? undefined,
       );
     },
   );
