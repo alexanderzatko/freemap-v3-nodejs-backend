@@ -182,7 +182,7 @@ export function startSocketDeviceTracking() {
     return slices;
   }
 
-  server.listen(Number(port), () => {
+  server.listen(port, () => {
     logger.info(`Device tracking socket listening on port ${port}.`);
   });
 

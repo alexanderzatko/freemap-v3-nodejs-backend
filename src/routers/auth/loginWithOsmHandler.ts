@@ -125,11 +125,11 @@ export function attachLoginWithOsmHandler(router: RouterInstance) {
       await login(
         ctx,
         'osm',
-        Number(osmId),
+        osmId,
         osmName,
         null,
-        lat === undefined ? undefined : Number(lat),
-        lon === undefined ? undefined : Number(lon),
+        lat === undefined ? undefined : lat,
+        lon === undefined ? undefined : lon,
         language,
         connect,
       );

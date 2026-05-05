@@ -86,9 +86,7 @@ export function trackingSubscribeHandler(
         }
         ${
           maxAge
-            ? sql` AND TIMESTAMPDIFF(SECOND, trackingPoint.createdAt, NOW()) < ${Number(
-                maxAge,
-              )}`
+            ? sql` AND TIMESTAMPDIFF(SECOND, trackingPoint.createdAt, NOW()) < ${maxAge}`
             : empty
         }
         ${
@@ -97,7 +95,7 @@ export function trackingSubscribeHandler(
             : empty
         }
         ORDER BY trackingPoint.createdAt DESC, trackingPoint.id DESC
-        ${maxCount ? sql` LIMIT ${Number(maxCount)}` : empty}
+        ${maxCount ? sql` LIMIT ${maxCount}` : empty}
       `;
 
       rows = await pool.query<unknown[]>(query);

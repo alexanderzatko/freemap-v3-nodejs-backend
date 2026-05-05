@@ -77,8 +77,7 @@ export function attachGetMapHandler(router: RouterInstance) {
         ctx.throw(403);
       }
 
-      const writers =
-        item.writers?.split(',').map((s: string) => Number(s)) ?? [];
+      const writers = item.writers?.split(',').map((s) => Number(s)) ?? [];
 
       ctx.body = ResponseSchema.parse({
         meta: MapMetaSchema.parse({
