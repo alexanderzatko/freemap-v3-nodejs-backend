@@ -28,7 +28,7 @@ export function attachGetAllTagsHandler(router: RouterInstance) {
     acceptValidator('application/json'),
     async (ctx) => {
       ctx.body = ResponseSchema.parse(
-        await pool.query(
+        await pool.query<unknown>(
           sql`SELECT name, COUNT(*) AS count FROM pictureTag GROUP BY name ORDER BY name`,
         ),
       );

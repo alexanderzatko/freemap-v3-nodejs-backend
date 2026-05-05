@@ -103,7 +103,7 @@ export async function attachGetStatsHandler(router: RouterInstance) {
         : sql` AND picture.createdAt > DATE_SUB(NOW(), INTERVAL ${Number(period)} DAY)`;
 
       const usersPerCountry = UsersPerCountrySchema.parse(
-        await pool.query(sql`
+        await pool.query<unknown>(sql`
           WITH
             per_country_user AS (
               SELECT
@@ -149,7 +149,7 @@ export async function attachGetStatsHandler(router: RouterInstance) {
       );
 
       const perUser = PerUserSchema.parse(
-        await pool.query(sql`
+        await pool.query<unknown>(sql`
           SELECT
             COUNT(*) AS pictureCount,
             userId,
@@ -177,7 +177,7 @@ export async function attachGetStatsHandler(router: RouterInstance) {
 
       if (user) {
         mePerCountry = MePerCountrySchema.parse(
-          await pool.query(sql`
+          await pool.query<unknown>(sql`
             WITH
               per_country_user AS (
                 SELECT
@@ -210,7 +210,7 @@ export async function attachGetStatsHandler(router: RouterInstance) {
         );
 
         const [meme] = MeSchema.parse(
-          await pool.query(sql`
+          await pool.query<unknown>(sql`
             WITH per_user AS (
               SELECT
                 userId,

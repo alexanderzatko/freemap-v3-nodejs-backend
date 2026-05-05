@@ -66,7 +66,7 @@ export function attachPutPictureHandler(router: RouterInstance) {
     } = body;
 
     await runInTransaction(async (conn) => {
-      const rows = await conn.query(
+      const rows = await conn.query<{ userId: number }[]>(
         sql`SELECT userId FROM picture WHERE id = ${ctx.params.id} FOR UPDATE`,
       );
 
@@ -79,7 +79,7 @@ export function attachPutPictureHandler(router: RouterInstance) {
       }
 
       const queries = [
-        conn.query(sql`
+        conn.query<unknown>(sql`
           UPDATE picture SET
             title = ${title},
             description = ${description},
@@ -91,7 +91,7 @@ export function attachPutPictureHandler(router: RouterInstance) {
         `),
 
         // delete missing tags
-        conn.query(
+        conn.query<unknown>(
           sql`DELETE FROM pictureTag WHERE pictureId = ${ctx.params.id}
             ${tags?.length ? ` AND name NOT IN (${join(tags)})` : empty}`,
         ),
@@ -99,7 +99,7 @@ export function attachPutPictureHandler(router: RouterInstance) {
 
       if (tags?.length) {
         queries.push(
-          conn.query(
+          conn.query<unknown>(
             sql`INSERT INTO pictureTag (name, pictureId)
                   VALUES ${bulk(tags.map((tag: string) => [tag, ctx.params.id]))}
                   ON DUPLICATE KEY UPDATE name = name`,

@@ -61,11 +61,22 @@ export function attachGetPurchasesHandler(router: RouterInstance) {
   router.get('/purchases', authenticator(true), async (ctx) => {
     const userId = ctx.state.user!.id;
 
-    const purchases = await pool.query(
+    const purchases = await pool.query<
+      { item: { type: string; amount: number }; createdAt: Date }[]
+    >(
       sql`SELECT item, createdAt FROM purchase WHERE userId = ${userId} ORDER BY createdAt DESC`,
     );
 
-    const intents = await pool.query(
+    const intents = await pool.query<
+      {
+        item: { type: string; amount: number };
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        expireAt: Date;
+        bankIntentStatus: string;
+      }[]
+    >(
       sql`SELECT item, status, createdAt, updatedAt, expireAt, bankIntentStatus
           FROM purchaseIntent
           WHERE userId = ${userId}
@@ -75,11 +86,11 @@ export function attachGetPurchasesHandler(router: RouterInstance) {
     );
 
     ctx.body = ResponseSchema.parse({
-      purchases: purchases.map((purchase: { item: unknown }) => ({
+      purchases: purchases.map((purchase) => ({
         ...purchase,
         item: stripLegacyPurchaseItemFields(purchase.item),
       })),
-      intents: intents.map((intent: { item: unknown }) => ({
+      intents: intents.map((intent) => ({
         ...intent,
         item: stripLegacyPurchaseItemFields(intent.item),
       })),

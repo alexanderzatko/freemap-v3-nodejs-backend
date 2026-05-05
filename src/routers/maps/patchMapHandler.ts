@@ -75,7 +75,7 @@ export function attachPatchMapHandler(router: RouterInstance) {
         const [item] = DbRowSchema.array()
           .max(1)
           .parse(
-            await conn.query(
+            await conn.query<unknown>(
               sql`SELECT userId, name, createdAt, modifiedAt, public FROM map WHERE id = ${id} FOR UPDATE`,
             ),
           );
@@ -85,7 +85,7 @@ export function attachPatchMapHandler(router: RouterInstance) {
         }
 
         const curWriters = (
-          await conn.query(
+          await conn.query<{ userId: number }[]>(
             sql`SELECT userId FROM mapWriteAccess WHERE mapId = ${id} FOR UPDATE`,
           )
         ).map(({ userId }: { userId: number }) => userId);
@@ -115,7 +115,7 @@ export function attachPatchMapHandler(router: RouterInstance) {
 
         const now = new Date();
 
-        await conn.query(sql`UPDATE map SET modifiedAt = ${now}
+        await conn.query<unknown>(sql`UPDATE map SET modifiedAt = ${now}
             ${name === undefined ? empty : sql`, name = ${name}`}
             ${pub === undefined ? empty : sql`, public = ${pub}`}
             ${data === undefined ? empty : sql`, data = ${JSON.stringify(data)}`}
@@ -123,10 +123,12 @@ export function attachPatchMapHandler(router: RouterInstance) {
           `);
 
         if (writers) {
-          conn.query(sql`DELETE FROM mapWriteAccess WHERE mapId = ${id}`);
+          conn.query<unknown>(
+            sql`DELETE FROM mapWriteAccess WHERE mapId = ${id}`,
+          );
 
           if (writers.length) {
-            await conn.query(
+            await conn.query<unknown>(
               sql`INSERT INTO mapWriteAccess (mapId, userId) VALUES ${bulk(writers.map((writer: number) => [id, writer]))}`,
             );
           }

@@ -99,7 +99,7 @@ export function attachGetPictureHandler(router: RouterInstance) {
       const [row] = PictureDbRowSchema.array()
         .max(1)
         .parse(
-          await pool.query(sql`
+          await pool.query<unknown>(sql`
             SELECT picture.id AS pictureId, picture.createdAt, pathname, title, picture.description, takenAt, ST_X(location) AS lon, ST_Y(location) AS lat, azimuth, pano,
               user.id as userId, user.name, premium,
               (SELECT GROUP_CONCAT(name SEPARATOR '\n') FROM pictureTag WHERE pictureId = picture.id) AS tags, ${raw(ratingSubquery)}
@@ -117,7 +117,7 @@ export function attachGetPictureHandler(router: RouterInstance) {
       }
 
       const commentRows = CommentDbRowSchema.array().parse(
-        await pool.query(sql`
+        await pool.query<unknown>(sql`
           SELECT pictureComment.id, pictureComment.createdAt, comment, user.name, userId
             FROM pictureComment JOIN user ON (userId = user.id)
             WHERE pictureId = ${ctx.params.id}

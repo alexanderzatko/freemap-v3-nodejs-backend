@@ -35,7 +35,7 @@ export function attachGetPublicTokensHandler(router: RouterInstance) {
     acceptValidator('application/json'),
     async (ctx) => {
       ctx.body = AccessTokensSchema.parse(
-        await pool.query(
+        await pool.query<unknown>(
           sql`SELECT id, token, createdAt, timeFrom, timeTo, listingLabel
           FROM trackingAccessToken
           WHERE listingLabel IS NOT NULL`,

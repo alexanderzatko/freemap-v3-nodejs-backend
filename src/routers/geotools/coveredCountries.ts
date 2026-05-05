@@ -26,7 +26,7 @@ export function attachCoveredCountriesHandler(router: RouterInstance) {
     async (ctx) => {
       ctx.body = RowSchema.array()
         .parse(
-          await pool.query(sql`
+          await pool.query<unknown>(sql`
             WITH poly AS (
               SELECT ST_GeomFromGeoJSON(${ctx.request.body}) AS geom
             )

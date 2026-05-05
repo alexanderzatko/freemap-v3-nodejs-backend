@@ -113,7 +113,13 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
       }
 
       await runInTransaction(async (conn) => {
-        const [intent] = await conn.query(
+        const [intent] = await conn.query<
+          {
+            userId: number;
+            item: { type: string; amount: number };
+            status: string;
+          }[]
+        >(
           sql`
             SELECT
               userId, item, status
@@ -131,7 +137,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
         }
 
         // Track last-seen webhook info.
-        await conn.query(
+        await conn.query<unknown>(
           sql`
             UPDATE
               purchaseIntent
@@ -148,7 +154,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
         );
 
         if (webhook.event === 'order-placed') {
-          await conn.query(
+          await conn.query<unknown>(
             sql`UPDATE purchaseIntent SET status = 'awaiting_payment' WHERE token = ${webhook.token}`,
           );
 
@@ -157,7 +163,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
 
         // Do not grant access.
         if (webhook.event === 'delayed-rejected') {
-          await conn.query(
+          await conn.query<unknown>(
             sql`UPDATE purchaseIntent SET status = 'rejected' WHERE token = ${webhook.token}`,
           );
 
@@ -175,7 +181,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
 
         const { userId, item } = intent;
 
-        await conn.query(
+        await conn.query<unknown>(
           sql`
             INSERT INTO
               purchase
@@ -189,7 +195,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
 
         switch (item.type) {
           case 'premium':
-            await conn.query(
+            await conn.query<unknown>(
               sql`
                 UPDATE
                   user
@@ -207,7 +213,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
             break;
 
           case 'credits':
-            await conn.query(
+            await conn.query<unknown>(
               sql`
                 UPDATE
                   user
@@ -225,11 +231,11 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
             );
         }
 
-        await conn.query(
+        await conn.query<unknown>(
           sql`UPDATE purchaseIntent SET status = 'confirmed' WHERE token = ${webhook.token}`,
         );
 
-        await conn.query(
+        await conn.query<unknown>(
           sql`DELETE FROM purchaseToken WHERE token = ${webhook.token}`,
         );
       });
@@ -254,7 +260,9 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
     }
 
     await runInTransaction(async (conn) => {
-      const [row] = await conn.query(
+      const [row] = await conn.query<
+        { userId: number; item: { type: string; amount: number } }[]
+      >(
         sql`
           SELECT
             userId, item
@@ -273,13 +281,13 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
 
       const { userId, item } = row;
 
-      await conn.query(
+      await conn.query<unknown>(
         sql`INSERT INTO purchase SET userId = ${userId}, item = ${item}, createdAt = NOW()`,
       );
 
       switch (item.type) {
         case 'premium':
-          await conn.query(
+          await conn.query<unknown>(
             sql`
               UPDATE
                 user
@@ -298,7 +306,7 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
           break;
 
         case 'credits':
-          await conn.query(
+          await conn.query<unknown>(
             sql`
               UPDATE
                 user
@@ -318,11 +326,11 @@ export function attachPurchaseValidateHandler(router: RouterInstance) {
           );
       }
 
-      await conn.query(
+      await conn.query<unknown>(
         sql`DELETE FROM purchaseToken WHERE token = ${legacy.token}`,
       );
 
-      await conn.query(
+      await conn.query<unknown>(
         sql`UPDATE purchaseIntent SET status = 'confirmed' WHERE token = ${legacy.token}`,
       );
     });

@@ -41,20 +41,18 @@ export async function login(
   const { userRow, authToken } = await runInTransaction(async (conn) => {
     await conn.beginTransaction();
 
-    const [userRow] = await conn.query(
+    const [userRow] = await conn.query<unknown[]>(
       sql`SELECT * FROM user WHERE ${raw(authProviderToColumn[authProvider])} = ${remoteUserId} FOR UPDATE`,
     );
 
-    userId = (currentUser ?? userRow ?? {}).id;
+    const user = UserRowSchema.parse(userRow);
+
+    userId = (currentUser ?? user ?? {}).id;
 
     const now = new Date();
 
-    if (userRow) {
-      // found user in DB for this auth provider
-
-      const authData: Record<string, string> = {};
-
-      for (const col of [
+    if (user) {
+      const cols = [
         'garminUserId',
         'garminAccessToken',
         'garminAccessTokenSecret',
@@ -62,8 +60,16 @@ export async function login(
         'facebookUserId',
         'googleUserId',
         'appleUserId',
-      ]) {
-        authData[col] = userRow[col];
+      ] as const;
+
+      // found user in DB for this auth provider
+
+      const authData: Partial<
+        Record<(typeof cols)[number], string | number | null>
+      > = {};
+
+      for (const col of cols) {
+        authData[col] = user[col];
       }
 
       if (currentUser) {
@@ -78,11 +84,7 @@ export async function login(
           'googleUserId',
           'appleUserId',
         ] as const) {
-          if (
-            currentUser[col] &&
-            userRow[col] &&
-            currentUser[col] !== userRow[col]
-          ) {
+          if (currentUser[col] && user[col] && currentUser[col] !== user[col]) {
             ctx.throw(400, 'conflicting providers');
           }
         }
@@ -95,8 +97,7 @@ export async function login(
         const {
           id,
           email,
-          lat,
-          lon,
+          coordinates,
           language,
           createdAt,
           isAdmin,
@@ -104,9 +105,9 @@ export async function login(
           settings,
           premiumExpiration,
           credits,
-        } = userRow;
+        } = user;
 
-        await conn.query(sql`DELETE FROM auth WHERE userId = ${id}`);
+        await conn.query<unknown>(sql`DELETE FROM auth WHERE userId = ${id}`);
 
         await Promise.all([
           ...[
@@ -119,21 +120,21 @@ export async function login(
             'purchase',
             'purchaseToken',
           ].map((table) =>
-            conn.query(
+            conn.query<unknown>(
               sql`UPDATE ${raw(table)} SET userId = ${currentUser.id} WHERE userId = ${id}`,
             ),
           ),
         ]);
 
-        await conn.query(sql`DELETE FROM user WHERE id = ${id}`);
+        await conn.query<unknown>(sql`DELETE FROM user WHERE id = ${id}`);
 
         // TODO merge settings
         // TODO sum purchase expirations
 
         const query = sql`UPDATE user SET
           email = COALESCE(email, ${email}),
-          lat = COALESCE(lat, ${lat}),
-          lon = COALESCE(lon, ${lon}),
+          lat = COALESCE(lat, ${coordinates?.lat}),
+          lon = COALESCE(lon, ${coordinates?.lon}),
           language = COALESCE(language, ${language}),
           createdAt = LEAST(createdAt, ${createdAt}),
           isAdmin = isAdmin OR ${isAdmin},
@@ -150,16 +151,16 @@ export async function login(
           WHERE id = ${currentUser.id}
         `;
 
-        await conn.query(query);
+        await conn.query<unknown>(query);
       } else {
         if (Object.keys(extraUserFields).length > 0) {
-          await conn.query(sql`UPDATE user SET
+          await conn.query<unknown>(sql`UPDATE user SET
           ${join(
             Object.entries(extraUserFields).map(
               ([column, value]) => sql`${raw(column)} = ${value as RawValue}`,
             ),
           )}
-          WHERE id = ${userRow.id}
+          WHERE id = ${user.id}
         `);
         }
       }
@@ -182,25 +183,25 @@ export async function login(
       const email = remoteEmail || null;
 
       if (currentUser) {
-        await conn.query(sql`UPDATE user SET
-        email = COALESCE(email, ${email}),
-        language = COALESCE(language, ${remoteLanguage}),
-        lat = COALESCE(lat, ${lat}),
-        lon = COALESCE(lon, ${lon}),
-        ${join(
-          Object.entries({
-            [authProviderToColumn[authProvider]]: remoteUserId,
-            ...extraUserFields,
-          }).map(
-            ([column, value]) => sql`${raw(column)} = ${value as RawValue}`,
-          ),
-        )}
+        await conn.query<unknown>(sql`UPDATE user SET
+          email = COALESCE(email, ${email}),
+          language = COALESCE(language, ${remoteLanguage}),
+          lat = COALESCE(lat, ${lat}),
+          lon = COALESCE(lon, ${lon}),
+          ${join(
+            Object.entries({
+              [authProviderToColumn[authProvider]]: remoteUserId,
+              ...extraUserFields,
+            }).map(
+              ([column, value]) => sql`${raw(column)} = ${value as RawValue}`,
+            ),
+          )}
 
-        WHERE id = ${currentUser.id}
-    `);
+          WHERE id = ${currentUser.id}
+        `);
       } else {
         userId = (
-          await conn.query(
+          await conn.query<{ insertId: number }>(
             sql`INSERT INTO user SET ${join(
               Object.entries({
                 name: remoteName || email?.split('@')[0] || 'Apple User',
@@ -231,12 +232,12 @@ export async function login(
     } else {
       authToken = randomBytes(32).toString('base64');
 
-      await conn.query(
+      await conn.query<unknown>(
         sql`INSERT INTO auth SET userId = ${userId}, createdAt = ${now}, authToken = ${authToken}`,
       );
     }
 
-    const [row] = await conn.query(
+    const [row] = await conn.query<unknown[]>(
       sql`SELECT * FROM user WHERE id = ${userId}`,
     );
 

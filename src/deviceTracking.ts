@@ -52,7 +52,7 @@ export async function storeTrackPoint(
 
   const speed = typeof speedKmh === 'number' ? speedKmh / 3.6 : speedMs;
 
-  const { insertId } = await conn.query(sql`
+  const { insertId } = await conn.query<{ insertId: number }>(sql`
     INSERT INTO trackingPoint SET
       deviceId = ${id},
       lat = ${lat},
@@ -69,13 +69,13 @@ export async function storeTrackPoint(
   `);
 
   if (maxAge != null) {
-    await conn.query(
+    await conn.query<unknown>(
       sql`DELETE FROM trackingPoint WHERE deviceId = ${id} AND TIMESTAMPDIFF(SECOND, createdAt, NOW()) > ${maxAge}`,
     );
   }
 
   if (maxCount != null) {
-    await conn.query(sql`
+    await conn.query<unknown>(sql`
       DELETE t FROM trackingPoint AS t JOIN (
         SELECT id FROM trackingPoint WHERE deviceId = ${id}
           ORDER BY id DESC LIMIT 18446744073709551615 OFFSET ${maxCount}
@@ -83,7 +83,7 @@ export async function storeTrackPoint(
     `);
   }
 
-  const rows = await conn.query(sql`
+  const rows = await conn.query<{ token: string }[]>(sql`
     SELECT token FROM trackingAccessToken
       WHERE deviceId = ${id} AND (timeFrom IS NULL OR timeFrom < ${now}) AND (timeTo IS NULL OR timeTo > ${now})
   `);

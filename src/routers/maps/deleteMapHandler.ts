@@ -32,7 +32,7 @@ export function attachDeleteMapHandler(router: RouterInstance) {
     authenticator(true),
     async (ctx) => {
       await runInTransaction(async (conn) => {
-        const [item] = await conn.query(
+        const [item] = await conn.query<{ userId: number }[]>(
           sql`SELECT userId FROM map WHERE id = ${ctx.params.id} FOR UPDATE`,
         );
 
@@ -44,7 +44,9 @@ export function attachDeleteMapHandler(router: RouterInstance) {
           ctx.throw(403);
         }
 
-        await conn.query(sql`DELETE FROM map WHERE id = ${ctx.params.id}`);
+        await conn.query<unknown>(
+          sql`DELETE FROM map WHERE id = ${ctx.params.id}`,
+        );
       });
 
       ctx.status = 204;

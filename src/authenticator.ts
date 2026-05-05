@@ -45,7 +45,7 @@ export function authenticator(require?: boolean): Middleware {
       authToken = m[1];
     }
 
-    const [userRow] = await pool.query(sql`
+    const [userRow] = await pool.query<unknown[]>(sql`
       SELECT user.*
       FROM user INNER JOIN auth ON (userId = id)
       WHERE authToken = ${authToken}

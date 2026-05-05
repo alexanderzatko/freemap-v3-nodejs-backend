@@ -133,7 +133,7 @@ export function attachPurchaseTokenHandler(router: RouterInstance) {
 
     const { callbackUrl, ...item } = body;
 
-    await pool.query(
+    await pool.query<unknown>(
       sql`INSERT INTO purchaseToken SET
         userId = ${user.id},
         createdAt = NOW(),
@@ -142,7 +142,7 @@ export function attachPurchaseTokenHandler(router: RouterInstance) {
         item = ${JSON.stringify(item)}`,
     );
 
-    await pool.query(
+    await pool.query<unknown>(
       sql`INSERT INTO purchaseIntent SET
         userId = ${user.id},
         createdAt = NOW(),

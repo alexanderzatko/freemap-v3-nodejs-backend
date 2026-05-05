@@ -241,7 +241,7 @@ async function byRadius(ctx: ParameterizedContext) {
     ORDER BY distance
     LIMIT 1000`;
 
-  const rows = IdRowSchema.parse(await pool.query(query));
+  const rows = IdRowSchema.parse(await pool.query<unknown>(query));
 
   ctx.body = rows.map((row) => ({ id: row.id }));
 }
@@ -328,7 +328,7 @@ async function byBbox(ctx: ParameterizedContext) {
     ORDER BY lat, lon
   `;
 
-  const rows = BboxRowSchema.parse(await pool.query(query));
+  const rows = BboxRowSchema.parse(await pool.query<unknown>(query));
 
   const getRating = fields?.includes('rating');
 
@@ -510,7 +510,7 @@ async function byOrder(ctx: ParameterizedContext) {
     LIMIT 1000
   `;
 
-  const rows = IdRowSchema.parse(await pool.query(query));
+  const rows = IdRowSchema.parse(await pool.query<unknown>(query));
 
   ctx.body = rows.map((row) => ({ id: row.id }));
 }

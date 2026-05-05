@@ -22,7 +22,7 @@ export function attachGetUsers(router: RouterInstance) {
 
   router.get('/users', acceptValidator('application/json'), async (ctx) => {
     ctx.body = ResponseSchema.parse(
-      await pool.query(sql`SELECT id, name FROM user ORDER BY name`),
+      await pool.query<unknown>(sql`SELECT id, name FROM user ORDER BY name`),
     );
   });
 }

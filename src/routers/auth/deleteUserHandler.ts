@@ -24,19 +24,21 @@ export function attachDeleteUserHandler(router: RouterInstance) {
     });
 
     await runInTransaction(async (conn) => {
-      const rows = await conn.query(
+      const rows = await conn.query<{ pathname: string }[]>(
         sql`SELECT pathname FROM picture WHERE userId = ${ctx.state.user!.id} FOR UPDATE`,
       );
 
       await Promise.all(
-        rows.map((row: { pathname: string }) =>
+        rows.map((row) =>
           unlink(`${picturesDir}/${row.pathname}`).catch((err) => {
             logger.error({ err }, 'Error deleting picture.');
           }),
         ),
       );
 
-      await conn.query(sql`DELETE FROM user WHERE id = ${ctx.state.user!.id}`);
+      await conn.query<unknown>(
+        sql`DELETE FROM user WHERE id = ${ctx.state.user!.id}`,
+      );
     });
 
     ctx.status = 204;

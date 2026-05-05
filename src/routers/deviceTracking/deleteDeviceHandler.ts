@@ -31,7 +31,7 @@ export function attachDeleteDeviceHandler(router: RouterInstance) {
     authenticator(true),
     async (ctx) => {
       await runInTransaction(async (conn) => {
-        const [item] = await conn.query(
+        const [item] = await conn.query<{ userId: number }[]>(
           sql`SELECT userId FROM trackingDevice WHERE id = ${ctx.params.id} FOR UPDATE`,
         );
 
@@ -43,7 +43,7 @@ export function attachDeleteDeviceHandler(router: RouterInstance) {
           ctx.throw(403);
         }
 
-        await conn.query(
+        await conn.query<unknown>(
           sql`DELETE FROM trackingDevice WHERE id = ${ctx.params.id}`,
         );
       });

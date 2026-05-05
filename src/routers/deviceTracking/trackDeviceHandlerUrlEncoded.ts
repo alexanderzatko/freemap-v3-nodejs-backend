@@ -51,7 +51,9 @@ export function attachTrackDeviceUrlEncodedHandler(router: RouterInstance) {
 
 async function urlEncodedHandler(ctx: ParameterizedContext) {
   await runInTransaction(async (conn) => {
-    const [item] = await conn.query(
+    const [item] = await conn.query<
+      { id: number; maxCount: number; maxAge: number }[]
+    >(
       sql`SELECT id, maxCount, maxAge FROM trackingDevice WHERE token = ${ctx.params.token}`,
     );
 

@@ -40,7 +40,7 @@ export function attachGetDeviceHandler(router: RouterInstance) {
       const [item] = TrackingDeviceSchema.array()
         .max(1)
         .parse(
-          await pool.query(sql`
+          await pool.query<unknown>(sql`
             SELECT id, name, token, createdAt, maxCount, maxAge, userId
               FROM trackingDevice
               WHERE id = ${ctx.params.id}

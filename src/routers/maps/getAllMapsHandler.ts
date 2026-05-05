@@ -44,7 +44,7 @@ export function attachGetAllMapsHandler(router: RouterInstance) {
       const user = ctx.state.user!;
 
       const items = DbRowSchema.array().parse(
-        await pool.query(sql`
+        await pool.query<unknown>(sql`
           SELECT id, name, public, createdAt, modifiedAt, map.userId, GROUP_CONCAT(mapWriteAccess.userId) AS writers
             FROM map LEFT JOIN mapWriteAccess ON (mapWriteAccess.mapId = id)
             WHERE map.userId = ${user.id}

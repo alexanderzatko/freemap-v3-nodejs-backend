@@ -45,15 +45,9 @@ export function attachGetAllTokensHandler(router: RouterInstance) {
     acceptValidator('application/json'),
     authenticator(true),
     async (ctx) => {
-      const [device] = z
-        .strictObject({ userId: z.uint32() })
-        .array()
-        .max(1)
-        .parse(
-          await pool.query(
-            sql`SELECT userId FROM trackingDevice WHERE id = ${ctx.params.id}`,
-          ),
-        );
+      const [device] = await pool.query<{ userId: number }[]>(
+        sql`SELECT userId FROM trackingDevice WHERE id = ${ctx.params.id}`,
+      );
 
       if (!device) {
         ctx.throw(404, 'no such tracking device');
@@ -64,7 +58,7 @@ export function attachGetAllTokensHandler(router: RouterInstance) {
       }
 
       ctx.body = AccessTokensSchema.parse(
-        await pool.query(sql`
+        await pool.query<unknown>(sql`
             SELECT id, token, createdAt, timeFrom, timeTo, note, listingLabel
             FROM trackingAccessToken
             WHERE deviceId = ${ctx.params.id}

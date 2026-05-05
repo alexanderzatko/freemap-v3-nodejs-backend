@@ -74,7 +74,7 @@ export function attachPostPictureHandler(router: RouterInstance) {
 
           const premium = body.payload === 'premium';
 
-          await pool.query(
+          await pool.query<unknown>(
             sql`UPDATE picture SET premium = ${premium} WHERE userId = ${ctx.state.user!.id}`,
           );
 
@@ -157,9 +157,9 @@ export function attachPostPictureHandler(router: RouterInstance) {
           const pano = exif['UsePanoramaViewer']?.value === 'True';
 
           const id = await runInTransaction(async (conn) => {
-            const { insertId } = await conn.query(sql`
+            const { insertId } = await conn.query<{ insertId: number }>(sql`
               INSERT INTO picture SET
-                pathname = ${`${name}.jpeg`},
+                pathname = ${name + '.jpeg'},
                 userId = ${ctx.state.user!.id},
                 title = ${title},
                 description = ${description},
@@ -172,7 +172,7 @@ export function attachPostPictureHandler(router: RouterInstance) {
             `);
 
             if (tags?.length) {
-              await conn.query(
+              await conn.query<unknown>(
                 sql`INSERT INTO pictureTag (name, pictureId) VALUES ${bulk(tags.map((tag) => [tag, insertId]))} ON DUPLICATE KEY UPDATE name = name`,
               );
             }

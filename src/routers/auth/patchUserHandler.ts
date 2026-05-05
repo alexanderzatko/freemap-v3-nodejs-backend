@@ -46,7 +46,7 @@ export function attachPatchUserHandler(router: RouterInstance) {
 
     // TODO validate duplicates
 
-    await pool.query(
+    await pool.query<unknown>(
       sql`UPDATE user SET ${join(
         keys.map(
           (key) =>

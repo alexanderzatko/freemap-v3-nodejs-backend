@@ -48,7 +48,9 @@ export function startSocketDeviceTracking() {
       connLogger.debug({ deviceId, command, args }, 'Received command.');
 
       await runInTransaction(async (conn) => {
-        const [item] = await conn.query(
+        const [item] = await conn.query<
+          { id: number; maxCount: number; maxAge: number }[]
+        >(
           sql`SELECT id, maxCount, maxAge FROM trackingDevice WHERE token IN (${`did:${deviceId}`}${imei ? sql`, ${`imei:${imei}`}` : empty})`,
         );
 

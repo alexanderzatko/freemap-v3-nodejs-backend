@@ -44,8 +44,8 @@ export function attachPostPictureRatingHandler(router: RouterInstance) {
     }
 
     await runInTransaction(async (conn) => {
-      const [row] = await conn.query(
-        sql`SELECT premium FROM picture WHERE id = ${ctx.params.id} FOR UPDATE`,
+      const [row] = await conn.query<{ userId: number; premium: boolean }[]>(
+        sql`SELECT userId, premium FROM picture WHERE id = ${ctx.params.id} FOR UPDATE`,
       );
 
       if (!row) {
@@ -64,7 +64,7 @@ export function attachPostPictureRatingHandler(router: RouterInstance) {
 
       const { stars } = body;
 
-      await conn.query(sql`
+      await conn.query<unknown>(sql`
           INSERT INTO pictureRating SET
               pictureId = ${ctx.params.id},
               userId = ${user.id},

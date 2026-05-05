@@ -71,10 +71,12 @@ export function attachPostPictureCommentHandler(router: RouterInstance) {
 
       const user = ctx.state.user!;
 
-      const { insertId, picInfo, emails } = await runInTransaction(
+      const { insertId, picInfo, recipients } = await runInTransaction(
         async (conn) => {
-          const [row] = await conn.query(
-            sql`SELECT premium FROM picture WHERE id = ${ctx.params.id} FOR UPDATE`,
+          const [row] = await conn.query<
+            { userId: number; premium: boolean }[]
+          >(
+            sql`SELECT userId, premium FROM picture WHERE id = ${ctx.params.id} FOR UPDATE`,
           );
 
           if (!row) {
@@ -90,7 +92,7 @@ export function attachPostPictureCommentHandler(router: RouterInstance) {
           }
 
           const proms = [
-            conn.query(sql`
+            conn.query<{ insertId: number }>(sql`
               INSERT INTO pictureComment SET
                 pictureId = ${ctx.params.id},
                 userId = ${user!.id},
@@ -98,38 +100,34 @@ export function attachPostPictureCommentHandler(router: RouterInstance) {
                 createdAt = ${new Date()}
             `),
             ...(getEnvBoolean('MAILGUN_ENABLE', false)
-              ? ([
-                  conn.query(sql`
-                SELECT IF(sendGalleryEmails, email, NULL) AS email, language, title, userId
-                  FROM user
-                  JOIN picture ON userId = user.id
-                  WHERE picture.id = ${ctx.params.id}
-              `),
-
-                  conn.query(sql`
-                SELECT DISTINCT email, sendGalleryEmails, language
-                  FROM user
-                  JOIN pictureComment ON userId = user.id
-                  WHERE sendGalleryEmails AND pictureId = ${ctx.params.id} AND userId <> ${user!.id} AND email IS NOT NULL
-              `),
-                ] as [
-                  Promise<
+              ? [
+                  conn.query<
                     {
                       title: string | null;
                       email: string | null;
                       userId: number | null;
                       language: string | null;
                     }[]
-                  >,
-                  Promise<{ email: string; language: string | null }[]>,
-                ])
+                  >(sql`
+                    SELECT IF(sendGalleryEmails, email, NULL) AS email, language, title, userId
+                      FROM user
+                      JOIN picture ON userId = user.id
+                      WHERE picture.id = ${ctx.params.id}
+                  `),
+                  conn.query<{ email: string; language: string | null }[]>(sql`
+                    SELECT DISTINCT email, sendGalleryEmails, language
+                      FROM user
+                      JOIN pictureComment ON userId = user.id
+                      WHERE sendGalleryEmails AND pictureId = ${ctx.params.id} AND userId <> ${user!.id} AND email IS NOT NULL
+                  `),
+                ]
               : ([undefined, undefined] as const)),
           ] as const;
 
-          const [{ insertId }, [picInfo] = [], emails = []] =
+          const [{ insertId }, [picInfo] = [], recipients = []] =
             await Promise.all(proms);
 
-          return { insertId, picInfo, emails };
+          return { insertId, picInfo, recipients };
         },
       );
 
@@ -147,7 +145,8 @@ export function attachPostPictureCommentHandler(router: RouterInstance) {
       ) {
         logger.info({ to, lang, own }, 'Sending picture comment mail.');
 
-        const picTitle = picInfo.title ? `"${picInfo.title} "` : '';
+        const picTitle =
+          'title' in picInfo && picInfo.title ? `"${picInfo.title} "` : '';
 
         const picUrl = webBaseUrl + '/?image=' + ctx.params.id;
 
@@ -195,27 +194,23 @@ export function attachPostPictureCommentHandler(router: RouterInstance) {
         'en';
 
       const promises: Promise<void>[] = [];
-
-      if (picInfo && picInfo.email && picInfo.userId !== user.id) {
+      if (
+        picInfo &&
+        picInfo.email &&
+        (!('userId' in picInfo) || picInfo.userId !== user.id)
+      ) {
         promises.push(
           sendCommentMail(picInfo.email, true, picInfo.language || acceptLang),
         );
       }
 
       promises.push(
-        ...emails.map(
-          ({
-            email: to,
-            language,
-          }: {
-            email: string;
-            language: string | null;
-          }) =>
-            sendCommentMail(
-              to,
-              false,
-              language || picInfo.language || acceptLang,
-            ),
+        ...recipients.map((recipient) =>
+          sendCommentMail(
+            recipient.email!,
+            false,
+            recipient.language || picInfo.language || acceptLang,
+          ),
         ),
       );
 

@@ -31,7 +31,7 @@ export function attachDeleteTokenHandler(router: RouterInstance) {
     authenticator(true),
     async (ctx) => {
       await runInTransaction(async (conn) => {
-        const [item] = await conn.query(sql`
+        const [item] = await conn.query<{ userId: number }[]>(sql`
           SELECT userId FROM trackingAccessToken
             JOIN trackingDevice ON (deviceId = trackingDevice.id)
             WHERE trackingAccessToken.id = ${ctx.params.id} FOR UPDATE
@@ -45,7 +45,7 @@ export function attachDeleteTokenHandler(router: RouterInstance) {
           ctx.throw(403);
         }
 
-        await conn.query(
+        await conn.query<unknown>(
           sql`DELETE FROM trackingAccessToken WHERE id = ${ctx.params.id}`,
         );
       });

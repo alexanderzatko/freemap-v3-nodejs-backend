@@ -153,7 +153,9 @@ async function traccarHandler(ctx: ParameterizedContext) {
   const { position, device } = body;
 
   await runInTransaction(async (conn) => {
-    const [item] = await conn.query(
+    const [item] = await conn.query<
+      { id: number; maxCount: number; maxAge: number }[]
+    >(
       sql`SELECT id, maxCount, maxAge FROM trackingDevice WHERE token = ${device.uniqueId}`,
     );
 

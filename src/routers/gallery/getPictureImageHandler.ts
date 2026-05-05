@@ -43,7 +43,13 @@ export function attachGetPictureImageHandler(router: RouterInstance) {
     acceptValidator('image/jpeg'),
     authenticator(false),
     async (ctx) => {
-      const [row] = await pool.query(
+      const [row] = await pool.query<
+        {
+          userId: number;
+          pathname: string;
+          premium: boolean;
+        }[]
+      >(
         sql`SELECT userId, pathname, premium FROM picture WHERE picture.id = ${ctx.params.id}`,
       );
 

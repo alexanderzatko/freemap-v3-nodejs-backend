@@ -47,7 +47,7 @@ export function attachPutTokenHandler(router: RouterInstance) {
       }
 
       await runInTransaction(async (conn) => {
-        const [item] = await conn.query(sql`
+        const [item] = await conn.query<{ userId: number }[]>(sql`
           SELECT userId
             FROM trackingAccessToken
             JOIN trackingDevice ON (deviceId = trackingDevice.id)
@@ -65,7 +65,7 @@ export function attachPutTokenHandler(router: RouterInstance) {
 
         const { timeFrom, timeTo, note, listingLabel } = body;
 
-        await conn.query(sql`
+        await conn.query<unknown>(sql`
             UPDATE trackingAccessToken SET
               note = ${note},
               timeFrom = ${timeFrom && new Date(timeFrom)},

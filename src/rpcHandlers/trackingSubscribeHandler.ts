@@ -28,7 +28,7 @@ export function trackingSubscribeHandler(
     const { user } = ctx.ctx.state || {};
 
     if ('deviceId' in params) {
-      const [row] = await pool.query(
+      const [row] = await pool.query<{ userId: number }[]>(
         sql`SELECT userId FROM trackingDevice WHERE id = ${params.deviceId}`,
       );
 
@@ -42,7 +42,7 @@ export function trackingSubscribeHandler(
         return;
       }
     } else {
-      const [row] = await pool.query(
+      const [row] = await pool.query<unknown[]>(
         sql`SELECT 1 FROM trackingAccessToken WHERE token = ${params.token}`,
       );
 
@@ -64,10 +64,10 @@ export function trackingSubscribeHandler(
 
     const { fromTime, maxCount, maxAge } = params;
 
-    let result;
+    let rows: unknown[];
 
     if (maxCount === 0 || maxAge === 0) {
-      result = [];
+      rows = [];
     } else {
       const query = sql`
         SELECT trackingPoint.id, lat, lon, message, trackingPoint.createdAt, altitude, speed, accuracy, hdop, bearing, battery, gsmSignal
@@ -100,12 +100,12 @@ export function trackingSubscribeHandler(
         ${maxCount ? sql` LIMIT ${Number(maxCount)}` : empty}
       `;
 
-      result = await pool.query(query);
+      rows = await pool.query<unknown[]>(query);
 
-      result.reverse();
+      rows.reverse();
     }
 
-    result = z
+    const result = z
       .strictObject({
         id: z.number(),
         createdAt: z.date(),
@@ -121,7 +121,7 @@ export function trackingSubscribeHandler(
         gsmSignal: z.number().nullable(),
       })
       .array()
-      .parse(result);
+      .parse(rows);
 
     ctx.respondResult(
       result.map((item) => ({

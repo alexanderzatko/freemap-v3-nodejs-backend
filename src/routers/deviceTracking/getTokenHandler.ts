@@ -47,7 +47,7 @@ export function attachGetTokenHandler(router: RouterInstance) {
       const [item] = TokenDetailSchema.array()
         .max(1)
         .parse(
-          await pool.query(sql`
+          await pool.query<unknown>(sql`
             SELECT trackingAccessToken.id, userId, trackingAccessToken.token, trackingAccessToken.createdAt, timeFrom, timeTo, note, listingLabel
               FROM trackingAccessToken
               JOIN trackingDevice ON (trackingAccessToken.deviceId = trackingDevice.id)

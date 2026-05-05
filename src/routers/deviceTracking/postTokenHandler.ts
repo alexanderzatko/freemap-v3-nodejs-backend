@@ -58,7 +58,7 @@ export function attachPostTokenHandler(router: RouterInstance) {
         .array()
         .max(1)
         .parse(
-          await pool.query(
+          await pool.query<unknown>(
             sql`SELECT userId FROM trackingDevice WHERE id = ${ctx.params.id}`,
           ),
         );
@@ -75,7 +75,7 @@ export function attachPostTokenHandler(router: RouterInstance) {
 
       const { timeFrom, timeTo, note, listingLabel } = body;
 
-      const { insertId } = await pool.query(sql`
+      const { insertId } = await pool.query<{ insertId: number }>(sql`
         INSERT INTO trackingAccessToken SET
           deviceId = ${ctx.params.id},
           token = ${token},

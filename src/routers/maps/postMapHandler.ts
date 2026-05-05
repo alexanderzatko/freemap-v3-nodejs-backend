@@ -50,7 +50,7 @@ export function attachPostMapHandler(router: RouterInstance) {
 
       const userId = ctx.state.user!.id;
 
-      await pool.query(sql`
+      await pool.query<unknown>(sql`
         INSERT INTO map SET
           id = ${id},
           name = ${name},
@@ -62,7 +62,7 @@ export function attachPostMapHandler(router: RouterInstance) {
       `);
 
       if (writers?.length) {
-        await pool.query(
+        await pool.query<unknown>(
           sql`INSERT INTO mapWriteAccess (mapId, userId) VALUES ${bulk(writers.map((writer) => [id, writer]))}`,
         );
       }

@@ -58,7 +58,7 @@ export function attachPutDeviceHandler(router: RouterInstance) {
       const { name, maxCount, maxAge, token = nanoid() } = body;
 
       await runInTransaction(async (conn) => {
-        const [item] = await conn.query(
+        const [item] = await conn.query<{ userId: number }[]>(
           sql`SELECT userId FROM trackingDevice WHERE id = ${id} FOR UPDATE`,
         );
 
@@ -71,7 +71,7 @@ export function attachPutDeviceHandler(router: RouterInstance) {
         }
 
         try {
-          await conn.query(
+          await conn.query<unknown>(
             sql`UPDATE trackingDevice SET name = ${name}, maxCount = ${maxCount}, maxAge = ${maxAge}, token = ${token} WHERE id = ${id}`,
           );
         } catch (err) {
@@ -83,13 +83,13 @@ export function attachPutDeviceHandler(router: RouterInstance) {
         }
 
         if (maxAge != null) {
-          await conn.query(sql`
+          await conn.query<unknown>(sql`
             DELETE FROM trackingPoint WHERE deviceId = ${id} AND TIMESTAMPDIFF(SECOND, createdAt, NOW()) > ${maxAge}
           `);
         }
 
         if (maxCount != null) {
-          await conn.query(sql`
+          await conn.query<unknown>(sql`
             DELETE t
             FROM trackingPoint AS t
             JOIN (

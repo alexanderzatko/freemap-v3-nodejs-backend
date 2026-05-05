@@ -29,7 +29,7 @@ export function attachGetAllPictureUsers(router: RouterInstance) {
     acceptValidator('application/json'),
     async (ctx) => {
       ctx.body = ResponseSchema.parse(
-        await pool.query(sql`SELECT userId AS id, user.name AS name, COUNT(*) AS count
+        await pool.query<unknown>(sql`SELECT userId AS id, user.name AS name, COUNT(*) AS count
           FROM picture
           JOIN user ON userId = user.id
           GROUP BY userId

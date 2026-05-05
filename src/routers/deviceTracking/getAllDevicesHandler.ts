@@ -26,7 +26,7 @@ export function attachGetAllDevicesHandler(router: RouterInstance) {
     authenticator(true),
     async (ctx) => {
       ctx.body = DevicesSchema.parse(
-        await pool.query(sql`
+        await pool.query<unknown>(sql`
           SELECT id, name, token, createdAt, maxCount, maxAge, userId
             FROM trackingDevice
             WHERE userId = ${ctx.state.user!.id}

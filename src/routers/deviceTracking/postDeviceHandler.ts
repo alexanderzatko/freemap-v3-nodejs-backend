@@ -53,7 +53,7 @@ export function attachPostDeviceHandler(router: RouterInstance) {
       const okToken = token || nanoid();
 
       try {
-        const { insertId } = await pool.query(sql`
+        const { insertId } = await pool.query<{ insertId: number }>(sql`
           INSERT INTO trackingDevice SET
             name = ${name},
             token = ${okToken},

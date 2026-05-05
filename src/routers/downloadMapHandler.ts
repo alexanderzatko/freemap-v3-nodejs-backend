@@ -208,7 +208,7 @@ export function attachDownloadMapHandler(router: RouterInstance) {
     const price = Math.ceil((totalTiles / 1_000_000) * map.creditsPerMTile);
 
     const insertId = await runInTransaction(async (conn) => {
-      let [{ credits }] = await conn.query(
+      let [{ credits }] = await conn.query<{ credits: number }[]>(
         sql`SELECT credits FROM user WHERE id = ${user.id} FOR UPDATE`,
       );
 
@@ -218,11 +218,11 @@ export function attachDownloadMapHandler(router: RouterInstance) {
         ctx.throw(409, 'not enough credit');
       }
 
-      conn.query(
+      conn.query<unknown>(
         sql`UPDATE user SET credits = ${credits} WHERE id = ${user.id}`,
       );
 
-      const { insertId } = await conn.query(
+      const { insertId } = await conn.query<{ insertId: number }>(
         sql`INSERT INTO blockedCredit SET amount = ${price}, userId = ${user.id}`,
       );
 
@@ -268,12 +268,14 @@ export function attachDownloadMapHandler(router: RouterInstance) {
 
       await runInTransaction(async (conn) => {
         if (refund) {
-          await conn.query(
+          await conn.query<unknown>(
             sql`UPDATE user SET credits = credits + ${price} WHERE id = ${user.id}`,
           );
         }
 
-        await conn.query(sql`DELETE FROM blockedCredit WHERE id = ${insertId}`);
+        await conn.query<unknown>(
+          sql`DELETE FROM blockedCredit WHERE id = ${insertId}`,
+        );
       });
 
       logger.info('Map download complete.');

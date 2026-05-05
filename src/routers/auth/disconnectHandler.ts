@@ -30,7 +30,7 @@ export function attachDisconnectHandler(router: RouterInstance) {
 
     const columns = providerColumns[ctx.params.provider];
 
-    await pool.query(
+    await pool.query<unknown>(
       sql`UPDATE user SET ${join(
         columns.map((col) => sql`${raw(col)} = NULL`),
         ',',

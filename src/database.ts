@@ -4,6 +4,7 @@ import sql from 'sql-template-tag';
 import z from 'zod';
 import { getEnv, getEnvInteger } from './env.js';
 import { appLogger } from './logger.js';
+import { UserRowSchema } from './types.js';
 
 export const pool = createPool({
   host: getEnv('MARIADB_HOST'),
@@ -248,7 +249,7 @@ export async function initDatabase() {
 
   try {
     for (const script of scripts) {
-      await db.query(script);
+      await db.query<unknown>(script);
     }
 
     await Promise.all(
@@ -256,7 +257,7 @@ export async function initDatabase() {
         (async () => {
           for (const script of Array.isArray(scripts) ? scripts : [scripts]) {
             try {
-              await db.query(script);
+              await db.query<unknown>(script);
             } catch (err) {
               logger.info(`Unsuccessful SQL ${script}: ${err}`);
 
@@ -271,9 +272,13 @@ export async function initDatabase() {
   }
 
   async function cleanup() {
-    await pool.query(sql`DELETE FROM purchaseToken WHERE expireAt < NOW()`);
+    await pool.query<unknown>(
+      sql`DELETE FROM purchaseToken WHERE expireAt < NOW()`,
+    );
 
-    await pool.query(sql`DELETE FROM purchaseIntent WHERE expireAt < NOW()`);
+    await pool.query<unknown>(
+      sql`DELETE FROM purchaseIntent WHERE expireAt < NOW()`,
+    );
 
     await runInTransaction(async (conn) => {
       // TODO track pending downloads taking more than a day :-o
@@ -281,19 +286,23 @@ export async function initDatabase() {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      const rows = await conn.query(
+      const rows = await conn.query<unknown>(
         sql`SELECT userId, amount FROM blockedCredit WHERE createdAt < ${yesterday} FOR UPDATE`,
       );
 
+      const blockedCredits = z
+        .array(z.object({ userId: z.uint32(), amount: z.number() }))
+        .parse(rows);
+
       await Promise.all(
-        rows.map((row: { userId: number; amount: number }) =>
-          conn.query(
-            sql`UPDATE user SET credits = credits + ${row.amount} WHERE id = ${row.userId}`,
+        blockedCredits.map(({ amount, userId }) =>
+          conn.query<unknown>(
+            sql`UPDATE user SET credits = credits + ${amount} WHERE id = ${userId}`,
           ),
         ),
       );
 
-      await conn.query(
+      await conn.query<unknown>(
         sql`DELETE FROM blockedCredit WHERE createdAt < ${yesterday}`,
       );
     });

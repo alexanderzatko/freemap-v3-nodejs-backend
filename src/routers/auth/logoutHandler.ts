@@ -15,7 +15,7 @@ export function attachLogoutHandler(router: RouterInstance) {
   });
 
   router.post('/logout', authenticator(true), async (ctx) => {
-    const { affectedRows } = await pool.query(
+    const { affectedRows } = await pool.query<{ affectedRows: number }>(
       sql`DELETE FROM auth WHERE authToken = ${ctx.state.user!.authToken}`,
     );
 

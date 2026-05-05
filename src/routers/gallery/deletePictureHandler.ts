@@ -29,7 +29,7 @@ export function attachDeletePictureHandler(router: RouterInstance) {
 
   router.delete('/pictures/:id', authenticator(true), async (ctx) => {
     const pathname = await runInTransaction(async (conn) => {
-      const rows = await conn.query(
+      const rows = await conn.query<{ pathname: string; userId: number }[]>(
         sql`SELECT pathname, userId FROM picture WHERE id = ${ctx.params.id} FOR UPDATE`,
       );
 
@@ -41,7 +41,9 @@ export function attachDeletePictureHandler(router: RouterInstance) {
         ctx.throw(403);
       }
 
-      await conn.query(sql`DELETE FROM picture WHERE id = ${ctx.params.id}`);
+      await conn.query<unknown>(
+        sql`DELETE FROM picture WHERE id = ${ctx.params.id}`,
+      );
 
       return rows[0].pathname;
     });
