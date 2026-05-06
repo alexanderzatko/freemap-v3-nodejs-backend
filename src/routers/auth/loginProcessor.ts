@@ -45,11 +45,7 @@ export async function login(
       sql`SELECT * FROM user WHERE ${raw(authProviderToColumn[authProvider])} = ${remoteUserId} FOR UPDATE`,
     );
 
-    if (!userRow) {
-      ctx.throw(404, `No such ${authProvider} user in DB: ${remoteUserId}`);
-    }
-
-    const user = UserRowSchema.parse(userRow);
+    const user = userRow ? UserRowSchema.parse(userRow) : undefined;
 
     userId = (currentUser ?? user ?? {}).id;
 
