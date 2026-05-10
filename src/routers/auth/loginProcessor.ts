@@ -45,7 +45,27 @@ export async function login(
       sql`SELECT * FROM user WHERE ${raw(authProviderToColumn[authProvider])} = ${remoteUserId} FOR UPDATE`,
     );
 
-    const user = userRow ? UserRowSchema.parse(userRow) : undefined;
+    let user = userRow ? UserRowSchema.parse(userRow) : undefined;
+    let matchedByEmail = false;
+
+    // First-time login from this provider: if a user with the same email
+    // already exists, link the provider to that account instead of creating
+    // a new one. Only link when the match is unambiguous and the existing
+    // user has no account on this provider yet.
+    if (!user && !currentUser && remoteEmail) {
+      const emailUserRows = await conn.query<unknown[]>(
+        sql`SELECT * FROM user WHERE email = ${remoteEmail} FOR UPDATE`,
+      );
+
+      if (emailUserRows.length === 1) {
+        const candidate = UserRowSchema.parse(emailUserRows[0]);
+
+        if (!candidate[authProviderToColumn[authProvider]]) {
+          user = candidate;
+          matchedByEmail = true;
+        }
+      }
+    }
 
     userId = (currentUser ?? user ?? {}).id;
 
@@ -145,24 +165,35 @@ export async function login(
           ${join(
             Object.entries(authData).map(
               ([column, value]) =>
-                sql`${raw(column)} = COALESCE(${raw(column)}, ${value as RawValue})`,
+                sql`${raw(column)} = COALESCE(${raw(column)}, ${value})`,
             ),
           )}
           WHERE id = ${currentUser.id}
         `;
 
         await conn.query<unknown>(query);
-      } else {
-        if (Object.keys(extraUserFields).length > 0) {
-          await conn.query<unknown>(sql`UPDATE user SET
+      } else if (matchedByEmail) {
+        await conn.query<unknown>(sql`UPDATE user SET
+          language = COALESCE(language, ${remoteLanguage}),
+          lat = COALESCE(lat, ${remoteLat ?? null}),
+          lon = COALESCE(lon, ${remoteLon ?? null}),
+          ${join(
+            Object.entries({
+              [authProviderToColumn[authProvider]]: remoteUserId,
+              ...extraUserFields,
+            }).map(([column, value]) => sql`${raw(column)} = ${value}`),
+          )}
+          WHERE id = ${user.id}
+        `);
+      } else if (Object.keys(extraUserFields).length > 0) {
+        await conn.query<unknown>(sql`UPDATE user SET
           ${join(
             Object.entries(extraUserFields).map(
-              ([column, value]) => sql`${raw(column)} = ${value as RawValue}`,
+              ([column, value]) => sql`${raw(column)} = ${value}`,
             ),
           )}
           WHERE id = ${user.id}
         `);
-        }
       }
     } else {
       // no such user in DB for this auth provider
@@ -192,9 +223,7 @@ export async function login(
             Object.entries({
               [authProviderToColumn[authProvider]]: remoteUserId,
               ...extraUserFields,
-            }).map(
-              ([column, value]) => sql`${raw(column)} = ${value as RawValue}`,
-            ),
+            }).map(([column, value]) => sql`${raw(column)} = ${value}`),
           )}
 
           WHERE id = ${currentUser.id}
@@ -216,9 +245,7 @@ export async function login(
                 credits: 100,
                 [authProviderToColumn[authProvider]]: remoteUserId,
                 ...extraUserFields,
-              }).map(
-                ([column, value]) => sql`${raw(column)} = ${value as RawValue}`,
-              ),
+              }).map(([column, value]) => sql`${raw(column)} = ${value}`),
             )}`,
           )
         ).insertId;
