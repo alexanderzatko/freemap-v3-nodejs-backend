@@ -1,3 +1,8 @@
+allowBuilds:
+  better-sqlite3: true
+  exifreader: true
+  gdal-async: true
+  protobufjs: true
 ignoredBuiltDependencies:
   - protobufjs
 onlyBuiltDependencies:
