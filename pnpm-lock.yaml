@@ -5,7 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  sharp@0.35.0: a371a1eb92d41ebcb4b5cb81014969b1a144717923a146dbd680371f083ca04a
+  sharp@0.35.0:
+    hash: a371a1eb92d41ebcb4b5cb81014969b1a144717923a146dbd680371f083ca04a
+    path: patches/sharp@0.35.0.patch
 
 importers:
 

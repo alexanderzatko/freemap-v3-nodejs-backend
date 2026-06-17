@@ -294,7 +294,9 @@ export async function initDatabase() {
             try {
               await db.query<unknown>(script);
             } catch (err) {
-              logger.info(`Unsuccessful SQL ${script}: ${err}`);
+              if (!isSqlDuplicateSchemaObject(err)) {
+                logger.info(`Unsuccessful SQL ${script}: ${err}`);
+              }
 
               return;
             }
@@ -373,6 +375,13 @@ function withJitter(ms: number) {
 
 export function isSqlDuplicateError(err: unknown): boolean {
   return z.object({ errno: z.literal(1062) }).safeParse(err).success;
+}
+
+/** Duplicate column (1060) or duplicate key name (1061) — idempotent migrations already applied. */
+function isSqlDuplicateSchemaObject(err: unknown): boolean {
+  return z
+    .object({ errno: z.union([z.literal(1060), z.literal(1061)]) })
+    .safeParse(err).success;
 }
 
 function isRetryableTxError(err: unknown): boolean {
